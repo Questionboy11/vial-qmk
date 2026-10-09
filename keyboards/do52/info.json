@@ -1,7 +1,13 @@
 {
     "keyboard_name": "DO52 YK",
+    "manufacturer": "Salicylic_Acid",
     "url": "",
     "maintainer": "qmk",
+    "usb": {
+        "vid": "0xFEA6",
+        "pid": "0x0A54",
+        "device_version": "0.0.1"
+    },
     "width": 16.5,
     "height": 4.5,
     "layouts": {
