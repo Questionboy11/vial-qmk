@@ -5,8 +5,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container: ghcr.io/qmk/qmk_cli:latest
+    runs-on: ubuntu-22.04
+    container: ghcr.io/vial-kb/vial:latest
 
     steps:
     - name: Checkout repo
@@ -14,12 +14,18 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Safe directory config
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Build firmware
       run: |
-        qmk compile -kb do52 -km vial
+        make do52:vial
 
     - name: Upload HEX Artifact
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: do52_vial_hex
-        path: .build/*.hex
+        path: |
+          *.hex
+          .build/*.hex
