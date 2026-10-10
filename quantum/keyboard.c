@@ -509,7 +509,10 @@ void keyboard_init(void) {
     st7565_init(DISPLAY_ROTATION_0);
 #endif
 #ifdef PS2_MOUSE_ENABLE
-    ps2_mouse_init();
+#    ifdef SPLIT_KEYBOARD
+    if (is_keyboard_master())
+#    endif
+        ps2_mouse_init();
 #endif
 #ifdef BACKLIGHT_ENABLE
     backlight_init();
@@ -796,7 +799,10 @@ void keyboard_task(void) {
 #endif
 
 #ifdef PS2_MOUSE_ENABLE
-    ps2_mouse_task();
+#    ifdef SPLIT_KEYBOARD
+    if (is_keyboard_master())
+#    endif
+        ps2_mouse_task();
 #endif
 
 #ifdef MIDI_ENABLE
