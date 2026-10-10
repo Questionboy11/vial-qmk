@@ -1,11 +1,13 @@
-MCU = atmega32u4
-BOOTLOADER = caterina
+# Bootmagic（Escキー長押しでUSB接続するとブートローダー起動）
+BOOTMAGIC_ENABLE = yes
 
-# Bootmagic Lite（パネルを開けずにキー長押しで復旧可能にする）
-BOOTMAGIC_ENABLE = lite
+# トラックポイント（PS/2、CLK=D1/INT1, DATA=D0）
+PS2_MOUSE_ENABLE = yes
+PS2_ENABLE = yes
+PS2_DRIVER = interrupt
 
-# ポインティングデバイス（トラックポイント）
-POINTING_DEVICE_ENABLE = yes
+# マウスボタン（KC_BTN1〜3）をキーに割り当てるため
+MOUSEKEY_ENABLE = yes
 
 # Vial / VIA 有効化
 VIA_ENABLE = yes
