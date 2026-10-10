@@ -38,7 +38,7 @@ COLOR_IME_OFF      := "455A64"
 
 cfg := {
     unit:        Integer(IniRead(SETTINGS_FILE, "display", "unit", 28)),
-    alphaIdle:   Integer(IniRead(SETTINGS_FILE, "display", "alpha_idle", 150)),
+    alphaIdle:   Integer(IniRead(SETTINGS_FILE, "display", "alpha_idle", 255)),
     alphaActive: Integer(IniRead(SETTINGS_FILE, "display", "alpha_active", 255)),
     flashMs:     Integer(IniRead(SETTINGS_FILE, "display", "flash_ms", 1000)),
 }
