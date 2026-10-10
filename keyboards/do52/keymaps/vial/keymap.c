@@ -134,6 +134,54 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+/*
+ * State notifications for the PC-side layer indicator (tools/do52_layer_indicator):
+ * F13 base, F14 symbol one-shot, F15 symbol locked, F16 nav, F17 game,
+ * F18/F19 mouse layer on/off, F20/F21 Caps Word on/off.
+ */
+static void notify_host(uint16_t keycode) {
+    if (is_keyboard_master()) {
+        tap_code(keycode);
+    }
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    static uint16_t last_layer_code = KC_F13;
+    static bool     last_mouse;
+
+    const layer_state_t mouse_bit = (layer_state_t)1 << _MOUSE;
+    uint16_t            layer_code;
+    switch (get_highest_layer(state & ~mouse_bit)) {
+        case _SYM:
+            layer_code = (get_oneshot_layer_state() & ONESHOT_TOGGLED) ? KC_F15 : KC_F14;
+            break;
+        case _NAV:
+            layer_code = KC_F16;
+            break;
+        case _GAME:
+            layer_code = KC_F17;
+            break;
+        default:
+            layer_code = KC_F13;
+            break;
+    }
+    if (layer_code != last_layer_code) {
+        last_layer_code = layer_code;
+        notify_host(layer_code);
+    }
+
+    bool mouse = state & mouse_bit;
+    if (mouse != last_mouse) {
+        last_mouse = mouse;
+        notify_host(mouse ? KC_F18 : KC_F19);
+    }
+    return state;
+}
+
+void caps_word_set_user(bool active) {
+    notify_host(active ? KC_F20 : KC_F21);
+}
+
 /* Caps Word for a JIS host: "-" must not be shifted (Shift + "-" is "=" on JIS). */
 bool caps_word_press_user(uint16_t keycode) {
     switch (keycode) {
