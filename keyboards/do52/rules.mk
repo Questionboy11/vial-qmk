@@ -1,6 +1,12 @@
 MCU = atmega32u4
 BOOTLOADER = caterina
 
+# Bootmagic Lite（パネルを開けずにキー長押しで復旧可能にする）
+BOOTMAGIC_ENABLE = lite
+
+# ポインティングデバイス（トラックポイント）
+POINTING_DEVICE_ENABLE = yes
+
 # Vial / VIA 有効化
 VIA_ENABLE = yes
 VIAL_ENABLE = yes
@@ -8,10 +14,8 @@ VIAL_ENABLE = yes
 # リンク時最適化（容量削減）
 LTO_ENABLE = yes
 
-# ATmega32U4 のメモリ節約およびリンクエラー解消
+# メモリ節約（32KB制限対策）
 QMK_SETTINGS = no
-
-# 未使用機能の無効化
 SPACE_CADET_ENABLE = no
 GRAVE_ESC_ENABLE = no
 MAGIC_ENABLE = no
