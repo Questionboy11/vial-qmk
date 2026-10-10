@@ -24,3 +24,4 @@
 #endif
 
 #define PS2_MOUSE_USE_REMOTE_MODE
+#define PS2_MOUSE_ROTATE 90
