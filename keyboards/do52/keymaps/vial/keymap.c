@@ -1,18 +1,18 @@
 #include <stdlib.h>
 #include QMK_KEYBOARD_H
 #include "keymap_japanese.h"
-#ifdef PS2_MOUSE_ENABLE
-#    include "ps2_mouse.h"
-#endif
 
 /* The OS keyboard layout is assumed to be JIS (Japanese). */
 
 enum layers { _BASE, _SYM, _NAV, _MOUSE, _GAME };
 
+enum custom_keycodes {
+    RS_BASE = QK_KB_0,
+};
+
 /* Right stick: layer selection, identical on every layer */
 #define RS_SYM  OSL(_SYM)
 #define RS_NAV  TO(_NAV)
-#define RS_BASE TO(_BASE)
 #define RS_GAME TO(_GAME)
 
 /* Keys are listed left to right. Each stick is: up, left, center, right, down */
@@ -60,54 +60,34 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 /*
- * Auto mouse layer: _MOUSE turns on once the TrackPoint has moved at least
- * AUTO_MOUSE_THRESHOLD counts (movements more than AUTO_MOUSE_IDLE_RESET ms
- * apart are not added up). It turns off AUTO_MOUSE_TIMEOUT ms after the last
- * movement or mouse key, or as soon as a non-modifier right-half key that is
- * transparent on _MOUSE is pressed. Left-half keys never turn it off.
- * Not used while _GAME is on.
+ * Right stick DOWN (RS_BASE):
+ * - Single tap: return to _BASE (turns off _MOUSE and resets one-shot layer)
+ * - Double tap or Hold (>= TAPPING_TERM): toggle _MOUSE layer on/off
  */
-#define AUTO_MOUSE_THRESHOLD  8
-#define AUTO_MOUSE_IDLE_RESET 150
-#define AUTO_MOUSE_TIMEOUT    600
+static bool     rs_base_held;
+static bool     rs_base_pending;
+static uint16_t rs_base_timer;
 
-static bool     auto_mouse_on;
-static uint8_t  mouse_keys_held;
-static uint16_t auto_mouse_timer;
-
-static void auto_mouse_off(void) {
-    auto_mouse_on = false;
+static void rs_base_to_base(void) {
+    reset_oneshot_layer();
     layer_off(_MOUSE);
+    layer_move(_BASE);
 }
 
-#ifdef PS2_MOUSE_ENABLE
-void ps2_mouse_moved_user(report_mouse_t *mouse_report) {
-    static uint16_t travel;
-    static uint16_t last_move;
-
-    if (layer_state_is(_GAME)) {
-        return;
-    }
-    if (!auto_mouse_on) {
-        if (timer_elapsed(last_move) > AUTO_MOUSE_IDLE_RESET) {
-            travel = 0;
-        }
-        last_move = timer_read();
-        travel += abs(mouse_report->x) + abs(mouse_report->y);
-        if (travel < AUTO_MOUSE_THRESHOLD) {
-            return;
-        }
-        travel        = 0;
-        auto_mouse_on = true;
-        layer_on(_MOUSE);
-    }
-    auto_mouse_timer = timer_read();
+static void rs_base_toggle_mouse(void) {
+    layer_invert(_MOUSE);
 }
-#endif
 
 void housekeeping_task_user(void) {
-    if (auto_mouse_on && !mouse_keys_held && timer_elapsed(auto_mouse_timer) > AUTO_MOUSE_TIMEOUT) {
-        auto_mouse_off();
+    if (rs_base_held && timer_elapsed(rs_base_timer) >= TAPPING_TERM) {
+        /* Long press detected -> toggle mouse mode immediately */
+        rs_base_held    = false;
+        rs_base_pending = false;
+        rs_base_toggle_mouse();
+    } else if (!rs_base_held && rs_base_pending && timer_elapsed(rs_base_timer) >= TAPPING_TERM) {
+        /* Single tap confirmed -> return to base layer */
+        rs_base_pending = false;
+        rs_base_to_base();
     }
 }
 
@@ -116,21 +96,34 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         reset_oneshot_layer();
     }
 
-    switch (keycode) {
-        case QK_MOUSE_BUTTON_1 ... QK_MOUSE_BUTTON_8:
-        case QK_MOUSE_WHEEL_UP ... QK_MOUSE_WHEEL_RIGHT:
-            if (record->event.pressed) {
-                mouse_keys_held++;
-            } else if (mouse_keys_held) {
-                mouse_keys_held--;
+    if (keycode == RS_BASE) {
+        if (record->event.pressed) {
+            if (rs_base_pending && timer_elapsed(rs_base_timer) < TAPPING_TERM) {
+                /* Double tap detected -> toggle mouse mode */
+                rs_base_pending = false;
+                rs_base_held    = false;
+                rs_base_toggle_mouse();
+            } else {
+                rs_base_held  = true;
+                rs_base_timer = timer_read();
             }
-            auto_mouse_timer = timer_read();
-            return true;
+        } else {
+            if (rs_base_held) {
+                /* Released before TAPPING_TERM -> wait for possible 2nd tap */
+                rs_base_held    = false;
+                rs_base_pending = true;
+                rs_base_timer   = timer_read();
+            }
+        }
+        return false;
     }
 
-    if (auto_mouse_on && record->event.pressed && record->event.key.row >= MATRIX_ROWS / 2 && keymap_key_to_keycode(_MOUSE, record->event.key) == KC_TRNS && !IS_MODIFIER_KEYCODE(keycode)) {
-        auto_mouse_off();
+    /* If another key is pressed while waiting for a 2nd tap, resolve single tap immediately */
+    if (rs_base_pending && record->event.pressed) {
+        rs_base_pending = false;
+        rs_base_to_base();
     }
+
     return true;
 }
 
