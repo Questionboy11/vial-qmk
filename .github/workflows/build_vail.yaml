@@ -5,33 +5,22 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
+    container:
+      image: qmkfm/qmk_cli
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v7
-      with:
-        submodules: recursive
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Set up Python
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.11'
+      - name: Build firmware
+        run: qmk compile -kb do52 -km vial
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc-avr binutils-avr avr-libc dfu-programmer
-        python -m pip install --upgrade pip
-        python -m pip install qmk
-    - name: Build firmware
-      run: |
-        make do52:vial
-    - name: Upload HEX Artifact
-      uses: actions/upload-artifact@v7
-      if: always()
-      with:
-        name: do52_vial_hex
-        path: |
-          *.hex
-          .build/*.hex
+      - name: Upload HEX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: do52_vial_hex
+          path: |
+            *.hex
+            .build/*.hex
