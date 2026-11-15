@@ -2,11 +2,14 @@
 #SingleInstance Force
 Persistent
 
-; DO52 レイヤー表示
+; DO52 レイヤー表示（keyboards/do52/keymaps/vial/keymap.c と対になる）
 ; キーボードのファームウェアは状態が変わると F13〜F21 を送ります。
 ;   F13 基本 / F14 記号（1文字） / F15 記号（固定） / F16 ナビ・テンキー / F17 ゲーム
 ;   F18 / F19 マウス開始 / 終了    F20 / F21 Caps Word オン / オフ
-; このスクリプトはそれを受け取り（アプリには渡しません）、画面端のミニ配置図を更新します。
+; 右スティック下（RS_BASE / 表示「基マ」）:
+;   単押し → 基本へ戻る（マウスOFF・ワンショット解除）
+;   二度押し または 長押し → マウスレイヤー ON/OFF
+; このスクリプトは F キー通知を受け取り（アプリには渡しません）、画面端のミニ配置図を更新します。
 
 SETTINGS_FILE := A_ScriptDir "\settings.ini"
 LAYOUT_FILE   := A_ScriptDir "\layout.txt"
