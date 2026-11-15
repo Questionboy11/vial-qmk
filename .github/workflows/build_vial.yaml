@@ -23,11 +23,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-avr binutils-avr avr-libc dfu-programmer
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install qmk
+          qmk --version
+          qmk config user.qmk_home="${{ github.workspace }}"
 
       - name: Build firmware
         run: |
           make do52:vial
+          ls -la do52_vial.hex .build/do52_vial.hex
           test -f do52_vial.hex
 
       - name: Upload HEX Artifact
