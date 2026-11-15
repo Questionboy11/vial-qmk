@@ -5,22 +5,30 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container:
-      image: qmkfm/qmk_cli
+    runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-avr binutils-avr avr-libc dfu-programmer
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
       - name: Build firmware
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          python3 -m pip install --break-system-packages -r requirements.txt
-          qmk config user.qmk_home="$GITHUB_WORKSPACE"
-          qmk compile -kb do52 -km vial 2>&1 | tee build.log
-          find / -name "do52_vial.hex" -exec cp {} "$GITHUB_WORKSPACE/" \; 2>/dev/null || true
+          make do52:vial
+          test -f do52_vial.hex
 
       - name: Upload HEX Artifact
         if: success()
@@ -34,4 +42,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-log
-          path: build.log
+          path: |
+            .build/*.log
+            *.log
+          if-no-files-found: ignore
