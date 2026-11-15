@@ -26,9 +26,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: do52_vial_hex
-          path: |
-            *.hex
-            .build/*.hex
+          path: "**/*.hex"
 
       - name: Upload Build Log on Failure
         if: failure()
