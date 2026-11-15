@@ -17,8 +17,10 @@ jobs:
       - name: Build firmware
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          export PATH="$GITHUB_WORKSPACE/bin:$PATH"
+          python3 -m pip install --break-system-packages -r requirements.txt || pip install -r requirements.txt
           set -o pipefail
-          make SKIP_GIT=yes VERBOSE=true do52:vial 2>&1 | tee build.log
+          make SKIP_GIT=yes do52:vial 2>&1 | tee build.log
 
       - name: Upload HEX Artifact
         if: success()
