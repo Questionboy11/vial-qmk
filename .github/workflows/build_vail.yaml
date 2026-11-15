@@ -17,12 +17,21 @@ jobs:
       - name: Build firmware
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          make SKIP_GIT=yes do52:vial
+          set -o pipefail
+          make SKIP_GIT=yes VERBOSE=true do52:vial 2>&1 | tee build.log
 
       - name: Upload HEX Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: do52_vial_hex
           path: |
             *.hex
             .build/*.hex
+
+      - name: Upload Build Log on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
